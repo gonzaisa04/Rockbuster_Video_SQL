@@ -1,0 +1,43 @@
+# This SQL query was executed to determine the average amount spent by the top 5 customers of Rockbuster using common table expresions
+
+WITH average_paid_cte (customer_id, first_name, last_name, country, city, total_amount) AS
+(SELECT B.customer_id, B.first_name, B.last_name, E.country, D.city, SUM(amount) AS total_amount
+  FROM payment A
+  INNER JOIN customer B ON A.customer_id = B.customer_id
+  INNER JOIN address C on B.address_id = C.address_id
+  INNER JOIN city D on C.city_id = D.city_id
+  INNER JOIN country E on D.country_id = E.country_id
+  WHERE city = 'Aurora' or city = 'Acua' or city = 'Citrus Heights' or city = 'Iwaki' or city = 'Ambattur' or city = 'Shanwei' or city = 'So 
+Leopoldo' or city = 'Teboksary' or city = 'Tianjin' or city = 'Cianjur'
+  GROUP BY B.customer_id, B.first_name, B.last_name, E.country, D.city
+  ORDER BY total_amount DESC
+  LIMIT 5)
+  SELECT AVG (total_amount) AS average
+  FROM average_paid_cte
+
+# This SQL query was executed to find the location(s) of the top 5 customers using CTE
+
+WITH customer_counts_cte (country, all_customer_count, top_customer_count) AS
+(SELECT D.country, COUNT(DISTINCT A.customer_id) AS all_customer_count, COUNT(top_5_customers) AS top_customer_count
+FROM customer A
+INNER JOIN address B ON A.address_id = B.address_id
+INNER JOIN city C ON B.city_id = C.city_id
+INNER JOIN country D on C.country_id = D.country_id
+LEFT JOIN(SELECT B.customer_id, B.first_name, B.last_name, E.country, D.city, SUM(amount) AS total_amount
+    FROM payment A
+    INNER JOIN customer B ON A.customer_id = B.customer_id
+    INNER JOIN address C on B.address_id = C.address_id
+    INNER JOIN city D on C.city_id = D.city_id
+    INNER JOIN country E on D.country_id = E.country_id
+    WHERE city = 'Aurora' or city = 'Acua' or city = 'Citrus Heights' or city = 'Iwaki' or city = 'Ambattur' or city = 'Shanwei' or city = 'So 
+Leopoldo' or city = 'Teboksary' or city = 'Tianjin' or city = 'Cianjur'
+    GROUP BY B.customer_id, B.first_name, B.last_name, E.country, D.city
+    ORDER BY total_amount DESC
+    LIMIT 5) AS top_5_customers
+ON A.customer_id = top_5_customers.customer_id
+GROUP BY D.country
+ORDER BY (top_customer_count) DESC
+LIMIT 5)
+SELECT country, COUNT(DISTINCT all_customer_count) AS all_customer_count, COUNT(top_customer_count) AS top_customer_count
+FROM customer_counts_cte
+GROUP BY country
